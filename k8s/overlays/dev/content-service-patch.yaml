@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: content-service
+  namespace: ai-platform
+spec:
+  template:
+    spec:
+      nodeSelector: {}
+      tolerations: []
+      containers:
+        - name: content-service
+          env:
+            - name: LOCAL_GPU_ENABLED
+              value: "false"
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "512Mi"

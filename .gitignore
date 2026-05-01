@@ -1,0 +1,112 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# C extensions
+*.pxd
+*.pxi
+*.pyx
+*.pyxbld/
+*.pyc
+*.pyd
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+Pipfile.lock
+
+# Virtual environments
+venv/
+.env/
+.venv/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+.log/
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Kubernetes
+*.kubeconfig
+.kube/
+
+# Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+secrets/
+
+# MinIO data
+minio_data/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+.pytest/
+test-results/
+
+# CI/CD
+.github/workflows/*.log
+actions-runner/
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Node.js (if any)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build artifacts
+*.tar.gz
+*.zip
+*.rar
+
+# Local configuration
+local-config.yaml
+local-config.yml
+config.local.yaml
+config.local.yml
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+```

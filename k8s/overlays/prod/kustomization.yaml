@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+bases:
+  - ../../base
+
+patches:
+  - path: replicas-patch.yaml
+  - path: resources-patch.yaml
+  - path: api-gateway-service-patch.yaml
+
+images:
+  - name: api-gateway
+    newName: registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/api-gateway
+    newTag: ${IMAGE_TAG:-latest}
+  - name: user-service
+    newName: registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/user-service
+    newTag: ${IMAGE_TAG:-latest}
+  - name: image-service
+    newName: registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/image-service
+    newTag: ${IMAGE_TAG:-latest}
+  - name: content-service
+    newName: registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/content-service
+    newTag: ${IMAGE_TAG:-latest}
+  - name: task-service
+    newName: registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/task-service
+    newTag: ${IMAGE_TAG:-latest}
