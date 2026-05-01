@@ -9,19 +9,5 @@ patches:
   - path: resources-patch.yaml
   - path: api-gateway-service-patch.yaml
 
-images:
-  - name: api-gateway
-    newName: registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/api-gateway
-    newTag: ${IMAGE_TAG:-latest}
-  - name: user-service
-    newName: registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/user-service
-    newTag: ${IMAGE_TAG:-latest}
-  - name: image-service
-    newName: registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/image-service
-    newTag: ${IMAGE_TAG:-latest}
-  - name: content-service
-    newName: registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/content-service
-    newTag: ${IMAGE_TAG:-latest}
-  - name: task-service
-    newName: registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/task-service
-    newTag: ${IMAGE_TAG:-latest}
+# 注意：镜像地址需要通过环境变量或手动修改
+# 建议使用脚本生成或在 CI/CD 中设置

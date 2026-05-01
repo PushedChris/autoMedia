@@ -1,4 +1,130 @@
-# 构建和部署指南
+# LangChain K3s AI Platform
+
+基于 K3s + 本地 GPU + 阿里云镜像仓库的 AI 图文创作平台。
+
+---
+
+## 📋 目录
+
+- [🏗️ 工程架构](#工程架构)
+- [🔐 GitHub 配置](#github-配置)
+- [⚙️ 配置参数说明](#配置参数说明)
+- [📦 本地开发](#本地开发)
+- [☸️ Kubernetes / K3s 部署](#kubernetes-k3s-部署)
+- [🔄 CI/CD 流程](#cicd-流程)
+- [🏥 健康检查](#健康检查)
+- [⚠️ 注意事项](#注意事项)
+- [🔧 故障排查](#故障排查)
+
+---
+
+## 🔐 GitHub 配置
+
+### 配置架构
+
+项目采用 **GitHub Secrets → CI/CD → Kubernetes Secrets** 的配置模式：
+
+```
+GitHub Secrets
+      │
+      ▼
+GitHub Actions (CI/CD)
+      │
+      ▼
+kubectl create secret generic app-secrets
+      │
+      ▼
+Kubernetes Cluster
+```
+
+### GitHub Secrets 配置
+
+在 GitHub 仓库 **Settings → Secrets and variables → Actions** 中添加以下 Secrets：
+
+| Secret 名称 | 说明 | 获取方式 | 必填 |
+|------------|------|---------|------|
+| `ALIYUN_REGISTRY_USERNAME` | 阿里云 ACR 用户名 | 阿里云控制台 | 是 |
+| `ALIYUN_REGISTRY_PASSWORD` | 阿里云 ACR 密码 | 阿里云控制台 → 访问凭证 | 是 |
+| `DEV_KUBECONFIG` | 开发环境 KubeConfig (base64) | `kubectl config view --raw \| base64` | 否 |
+| `PROD_KUBECONFIG` | 生产环境 KubeConfig (base64) | `kubectl config view --raw \| base64` | 否 |
+| `MINIO_ACCESS_KEY` | MinIO 访问密钥 | 自定义（建议复杂密码） | 是 |
+| `MINIO_SECRET_KEY` | MinIO 秘密密钥 | 自定义（建议复杂密码） | 是 |
+| `DATABASE_PASSWORD` | PostgreSQL 数据库密码 | 自定义（建议复杂密码） | 是 |
+| `REGISTRY_URL` | 阿里云镜像仓库地址 | 默认: registry.cn-hangzhou.aliyuncs.com | 是 |
+| `REGISTRY_NAMESPACE` | 阿里云镜像仓库命名空间 | 如: ai-platform-2026 | 是 |
+
+### GitHub Variables 配置 (可选)
+
+在 **Settings → Secrets and variables → Actions → Variables** 中可以添加：
+
+| Variable 名称 | 默认值 | 说明 |
+|--------------|-------|------|
+| `REGISTRY` | registry.cn-hangzhou.aliyuncs.com | 镜像仓库地址 |
+| `REPOSITORY` | ai-platform-2026 | 镜像仓库命名空间 |
+
+### 配置步骤
+
+1. **创建阿里云容器镜像服务**
+   - 登录阿里云控制台 → 容器镜像服务
+   - 创建命名空间（如 `ai-platform-2026`）
+   - 创建 5 个镜像仓库：api-gateway, user-service, image-service, content-service, task-service
+   - 设置访问凭证（用户名/密码）
+
+2. **配置 GitHub Secrets**
+   - 进入仓库设置 → Secrets and variables → Actions
+   - 点击 New repository secret
+   - 依次添加上述所有 Secrets
+
+3. **设置 GitHub 环境 (生产环境)**
+   - Settings → Environments → New environment
+   - 命名为 `production`
+   - 配置保护规则：
+     - 必需审查者（推荐 1-2 人）
+     - 等待时间（可选，如 10 分钟）
+     - 保护分支（main）
+
+4. **本地开发配置 (可选)**
+   ```bash
+   # 方法1: 使用脚本生成本地 Secret（仅用于本地测试）
+   bash scripts/generate-secrets.sh
+   
+   # 方法2: 手动创建 Kubernetes Secret
+   kubectl create secret generic app-secrets \
+     --namespace=ai-platform \
+     --from-literal=MINIO_ACCESS_KEY=your-key \
+     --from-literal=MINIO_SECRET_KEY=your-secret \
+     --from-literal=DATABASE_PASSWORD=your-password \
+     --from-literal=REGISTRY_URL=registry.cn-hangzhou.aliyuncs.com \
+     --from-literal=REGISTRY_USERNAME=your-username \
+     --from-literal=REGISTRY_PASSWORD=your-password \
+     --from-literal=REGISTRY_NAMESPACE=ai-platform-2026
+   ```
+
+### CI/CD 注入流程
+
+当 CI/CD 流水线运行时，会自动执行以下步骤：
+
+```bash
+kubectl create secret generic app-secrets \
+  --namespace=ai-platform \
+  --from-literal=MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }} \
+  --from-literal=MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }} \
+  --from-literal=DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} \
+  --from-literal=REGISTRY_URL=${{ secrets.REGISTRY_URL }} \
+  --from-literal=REGISTRY_USERNAME=${{ secrets.ALIYUN_REGISTRY_USERNAME }} \
+  --from-literal=REGISTRY_PASSWORD=${{ secrets.ALIYUN_REGISTRY_PASSWORD }} \
+  --from-literal=REGISTRY_NAMESPACE=${{ secrets.REGISTRY_NAMESPACE }} \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+### 安全说明
+
+- **敏感文件**: `k8s/base/secrets.yaml` 已添加到 `.gitignore`，不会被提交
+- **CI/CD 管理**: 所有敏感配置由 GitHub Actions 动态注入
+- **密钥轮换**: 可以随时在 GitHub Secrets 中更新密码，下次部署时自动生效
+- **权限控制**: 通过 GitHub Environments 控制生产环境部署权限
+
+---
 
 ## 🏗️ 工程架构
 
@@ -58,49 +184,64 @@
 
 ## ⚙️ 配置参数说明
 
-### MinIO 配置
+### 配置管理方式
+
+项目使用 **ConfigMap** + **Secret** 双重配置管理：
+
+| 配置类型 | 位置 | 用途 |
+|---------|------|------|
+| **ConfigMap** | `k8s/base/configmap.yaml` | 存储非敏感配置 |
+| **Secret** | `k8s/base/secrets.yaml` | 存储敏感配置（base64 编码） |
+
+### MinIO 配置 (ConfigMap + Secret)
+
+| 参数名 | 来源 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `MINIO_ENDPOINT` | ConfigMap | minio:9000 | MinIO 服务地址 (容器内) |
+| `MINIO_ACCESS_KEY` | Secret | minioadmin | MinIO 访问密钥 |
+| `MINIO_SECRET_KEY` | Secret | minioadmin | MinIO 秘密密钥 |
+| `MINIO_BUCKET_RAW` | ConfigMap | raw | 原始图片存储 Bucket |
+| `MINIO_BUCKET_PROCESSED` | ConfigMap | processed | 处理结果存储 Bucket |
+| `MINIO_BUCKET_OUTPUT` | ConfigMap | output | 最终输出存储 Bucket |
+
+### 数据库配置 (ConfigMap + Secret)
+
+| 参数名 | 来源 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `DATABASE_USERNAME` | ConfigMap | postgres | 数据库用户名 |
+| `DATABASE_PASSWORD` | Secret | postgres | 数据库密码 |
+| `DATABASE_HOST` | ConfigMap | postgres | 数据库主机 |
+| `DATABASE_PORT` | ConfigMap | 5432 | 数据库端口 |
+| `DATABASE_NAME` | ConfigMap | ai_platform | 数据库名称 |
+
+> 注意：应用代码需要组合成完整的 `DATABASE_URL`。
+
+### Redis 配置 (ConfigMap)
 
 | 参数名 | 默认值 | 说明 |
-|--------|--------|-----|
-| `MINIO_ENDPOINT` | minio:9000 | MinIO 服务地址 (容器内) |
-| `MINIO_ACCESS_KEY` | minioadmin | MinIO 访问密钥 |
-| `MINIO_SECRET_KEY` | minioadmin | MinIO 秘密密钥 |
-| `MINIO_BUCKET_RAW` | raw | 原始图片存储 Bucket |
-| `MINIO_BUCKET_PROCESSED` | processed | 处理结果存储 Bucket |
-| `MINIO_BUCKET_OUTPUT` | output | 最终输出存储 Bucket |
-
-### 数据库配置
-
-| 参数名 | 默认值 | 说明 |
-|--------|--------|-----|
-| `DATABASE_URL` | postgresql://postgres:postgres@postgres:5432/ai_platform | PostgreSQL 数据库连接地址 |
-
-### Redis 配置
-
-| 参数名 | 默认值 | 说明 |
-|--------|--------|-----|
+|--------|--------|------|
 | `REDIS_URL` | redis://redis:6379/0 | Redis 连接地址 |
 
-### AI 配置
+### AI 配置 (ConfigMap)
 
 | 参数名 | 默认值 | 说明 |
-|--------|--------|-----|
+|--------|--------|------|
 | `LOCAL_GPU_ENABLED` | true | 是否启用本地 GPU 推理 |
 | `CLOUD_FALLBACK_URL` | (空) | 云端 AI 服务的回退地址 |
 
-### 服务间通信配置
+### 服务间通信配置 (ConfigMap)
 
 | 参数名 | 默认值 | 说明 |
-|--------|--------|-----|
+|--------|--------|------|
 | `USER_SERVICE_URL` | http://user-service:8001 | 用户服务地址 |
 | `IMAGE_SERVICE_URL` | http://image-service:8002 | 图片服务地址 |
 | `CONTENT_SERVICE_URL` | http://content-service:8003 | 内容服务地址 |
 | `TASK_SERVICE_URL` | http://task-service:8004 | 任务服务地址 |
 
-### 其他配置
+### 其他配置 (ConfigMap)
 
 | 参数名 | 默认值 | 说明 |
-|--------|--------|-----|
+|--------|--------|------|
 | `UPLOAD_PREFIX` | uploads | 上传文件前缀 |
 | `TASK_PREFIX` | tasks | 任务键前缀 |
 
@@ -156,8 +297,8 @@ docker build -f services/task-service/Dockerfile -t task-service:latest .
 k8s/
 ├── base/                    # 基础配置 (所有环境共享)
 │   ├── namespace.yaml
-│   ├── configmap.yaml
-│   ├── secrets.yaml
+│   ├── configmap.yaml       # 非敏感配置
+│   ├── secrets.yaml         # 敏感配置 (需要更新)
 │   ├── minio.yaml
 │   ├── postgres.yaml
 │   ├── redis.yaml
@@ -194,6 +335,18 @@ k8s/
 | **API Gateway** | ClusterIP | LoadBalancer (端口 80) |
 | **镜像仓库** | 本地镜像 | 远程私有仓库 |
 
+### 生成和配置 Secret
+
+在部署前，先配置敏感信息：
+
+```bash
+# 交互式生成 Secret（推荐）
+bash scripts/generate-secrets.sh
+
+# 配置阿里云镜像仓库地址
+bash scripts/setup-aliyun-registry.sh
+```
+
 ### 部署到开发环境
 
 ```bash
@@ -212,8 +365,7 @@ kubectl port-forward service/api-gateway 8000:8000 -n ai-platform
 
 ```bash
 # 构建并推送镜像到私有仓库
-docker build -f services/api-gateway/Dockerfile -t registry.example.com/ai-platform/api-gateway:latest .
-docker push registry.example.com/ai-platform/api-gateway:latest
+make build-push IMAGE_TAG=v1.0.0
 
 # 部署生产环境
 kubectl apply -k k8s/overlays/prod
@@ -236,18 +388,6 @@ kubectl apply -k k8s/overlays/dev
 
 # 检查状态
 kubectl get pods -n ai-platform -w
-```
-
-### 环境变量配置
-
-所有服务通过 ConfigMap 和 Secret 统一管理配置：
-
-```yaml
-# configmap (公开配置)
-kubectl get configmap app-config -n ai-platform -o yaml
-
-# secret (敏感配置 - base64 编码)
-kubectl get secret app-secrets -n ai-platform -o yaml
 ```
 
 ---
@@ -311,17 +451,6 @@ kubectl get secret app-secrets -n ai-platform -o yaml
 | image-service | `registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/image-service` |
 | content-service | `registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/content-service` |
 | task-service | `registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/task-service` |
-
-### GitHub Secrets 配置
-
-在 GitHub 仓库设置 -> Secrets and variables -> Actions 中添加以下 Secrets：
-
-| Secret 名称 | 说明 | 获取方式 |
-|------------|------|---------|
-| `ALIYUN_REGISTRY_USERNAME` | 阿里云 ACR 用户名 | 阿里云控制台 |
-| `ALIYUN_REGISTRY_PASSWORD` | 阿里云 ACR 密码 | 阿里云控制台 |
-| `DEV_KUBECONFIG` | 开发环境 KubeConfig | `kubectl config view --raw \| base64` |
-| `PROD_KUBECONFIG` | 生产环境 KubeConfig | `kubectl config view --raw \| base64` |
 
 ### 本地开发命令
 
@@ -419,6 +548,7 @@ kubectl rollout undo deployment/api-gateway -n ai-platform --to-revision=2
 3. **首次构建**: 首次构建可能需要较长时间下载 Python 依赖包
 4. **端口占用**: 如果端口冲突，修改 `docker-compose.yml` 中的端口映射
 5. **数据持久化**: 使用 `docker-compose down -v` 会删除所有数据，谨慎使用
+6. **敏感信息**: 不要提交 `k8s/base/secrets.yaml` 到 Git，建议添加到 `.gitignore`
 
 ---
 
@@ -445,4 +575,18 @@ lsof -i :<port>
 ```bash
 # 清理缓存并重新构建
 docker-compose build --no-cache <service-name>
+```
+
+### 问题: Kubernetes 部署失败
+```bash
+# 查看 Pod 状态和事件
+kubectl get pods -n ai-platform
+kubectl get events -n ai-platform -w
+
+# 查看 Pod 日志
+kubectl logs <pod-name> -n ai-platform
+
+# 检查配置
+kubectl get configmap app-config -n ai-platform -o yaml
+kubectl get secret app-secrets -n ai-platform -o yaml
 ```

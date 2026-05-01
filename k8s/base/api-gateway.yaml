@@ -30,11 +30,105 @@ spec:
           image: api-gateway:latest
           ports:
             - containerPort: 8000
-          envFrom:
-            - configMapRef:
-                name: app-config
-            - secretRef:
-                name: app-secrets
+          env:
+            # 从 ConfigMap 读取非敏感配置
+            - name: MINIO_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: MINIO_ENDPOINT
+            - name: MINIO_BUCKET_RAW
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: MINIO_BUCKET_RAW
+            - name: MINIO_BUCKET_PROCESSED
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: MINIO_BUCKET_PROCESSED
+            - name: MINIO_BUCKET_OUTPUT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: MINIO_BUCKET_OUTPUT
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: REDIS_URL
+            - name: USER_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: USER_SERVICE_URL
+            - name: IMAGE_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: IMAGE_SERVICE_URL
+            - name: CONTENT_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: CONTENT_SERVICE_URL
+            - name: TASK_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: TASK_SERVICE_URL
+            - name: LOCAL_GPU_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: LOCAL_GPU_ENABLED
+            - name: UPLOAD_PREFIX
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: UPLOAD_PREFIX
+            - name: TASK_PREFIX
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: TASK_PREFIX
+            # 从 Secret 读取敏感配置
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MINIO_ACCESS_KEY
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MINIO_SECRET_KEY
+            # 数据库配置 - 应用代码中组合 DATABASE_URL
+            - name: DATABASE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DATABASE_USERNAME
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DATABASE_PASSWORD
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DATABASE_HOST
+            - name: DATABASE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DATABASE_PORT
+            - name: DATABASE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DATABASE_NAME
           resources:
             requests:
               cpu: "100m"

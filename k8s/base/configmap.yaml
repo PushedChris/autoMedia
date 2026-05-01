@@ -4,14 +4,30 @@ metadata:
   name: app-config
   namespace: ai-platform
 data:
+  # MinIO 配置
   MINIO_ENDPOINT: "minio:9000"
   MINIO_BUCKET_RAW: "raw"
   MINIO_BUCKET_PROCESSED: "processed"
   MINIO_BUCKET_OUTPUT: "output"
+  
+  # Redis 配置
   REDIS_URL: "redis://redis:6379/0"
-  DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/ai_platform"
+  
+  # 数据库配置 (密码从 Secret 获取)
+  DATABASE_USERNAME: "postgres"
+  DATABASE_HOST: "postgres"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "ai_platform"
+  
+  # 服务间通信配置
   USER_SERVICE_URL: "http://user-service:8001"
   IMAGE_SERVICE_URL: "http://image-service:8002"
   CONTENT_SERVICE_URL: "http://content-service:8003"
   TASK_SERVICE_URL: "http://task-service:8004"
+  
+  # AI 配置
   LOCAL_GPU_ENABLED: "false"
+  
+  # 其他配置
+  UPLOAD_PREFIX: "uploads"
+  TASK_PREFIX: "tasks"

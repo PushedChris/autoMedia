@@ -146,6 +146,19 @@ jobs:
           echo "${{ secrets.DEV_KUBECONFIG }}" | base64 -d > /tmp/kubeconfig
           export KUBECONFIG=/tmp/kubeconfig
 
+      - name: Create/update Kubernetes Secret from GitHub Secrets
+        run: |
+          kubectl create secret generic app-secrets \
+            --namespace=ai-platform \
+            --from-literal=MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }} \
+            --from-literal=MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }} \
+            --from-literal=DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} \
+            --from-literal=REGISTRY_URL=${{ secrets.REGISTRY_URL }} \
+            --from-literal=REGISTRY_USERNAME=${{ secrets.ALIYUN_REGISTRY_USERNAME }} \
+            --from-literal=REGISTRY_PASSWORD=${{ secrets.ALIYUN_REGISTRY_PASSWORD }} \
+            --from-literal=REGISTRY_NAMESPACE=${{ secrets.REGISTRY_NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Deploy to dev
         run: |
           kubectl apply -k k8s/overlays/dev --record
@@ -174,6 +187,19 @@ jobs:
         run: |
           echo "${{ secrets.PROD_KUBECONFIG }}" | base64 -d > /tmp/kubeconfig
           export KUBECONFIG=/tmp/kubeconfig
+
+      - name: Create/update Kubernetes Secret from GitHub Secrets
+        run: |
+          kubectl create secret generic app-secrets \
+            --namespace=ai-platform \
+            --from-literal=MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }} \
+            --from-literal=MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }} \
+            --from-literal=DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} \
+            --from-literal=REGISTRY_URL=${{ secrets.REGISTRY_URL }} \
+            --from-literal=REGISTRY_USERNAME=${{ secrets.ALIYUN_REGISTRY_USERNAME }} \
+            --from-literal=REGISTRY_PASSWORD=${{ secrets.ALIYUN_REGISTRY_PASSWORD }} \
+            --from-literal=REGISTRY_NAMESPACE=${{ secrets.REGISTRY_NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy to prod
         run: |
