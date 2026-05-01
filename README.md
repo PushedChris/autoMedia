@@ -2,7 +2,7 @@
 
 基于 K3s + 本地 GPU + 阿里云镜像仓库的 AI 图文创作平台。
 
----
+***
 
 ## 📋 目录
 
@@ -16,7 +16,7 @@
 - [⚠️ 注意事项](#注意事项)
 - [🔧 故障排查](#故障排查)
 
----
+***
 
 ## 🔐 GitHub 配置
 
@@ -41,26 +41,26 @@ Kubernetes Cluster
 
 在 GitHub 仓库 **Settings → Secrets and variables → Actions** 中添加以下 Secrets：
 
-| Secret 名称 | 说明 | 获取方式 | 必填 |
-|------------|------|---------|------|
-| `ALIYUN_REGISTRY_USERNAME` | 阿里云 ACR 用户名 | 阿里云控制台 | 是 |
-| `ALIYUN_REGISTRY_PASSWORD` | 阿里云 ACR 密码 | 阿里云控制台 → 访问凭证 | 是 |
-| `DEV_KUBECONFIG` | 开发环境 KubeConfig (base64) | `kubectl config view --raw \| base64` | 否 |
-| `PROD_KUBECONFIG` | 生产环境 KubeConfig (base64) | `kubectl config view --raw \| base64` | 否 |
-| `MINIO_ACCESS_KEY` | MinIO 访问密钥 | 自定义（建议复杂密码） | 是 |
-| `MINIO_SECRET_KEY` | MinIO 秘密密钥 | 自定义（建议复杂密码） | 是 |
-| `DATABASE_PASSWORD` | PostgreSQL 数据库密码 | 自定义（建议复杂密码） | 是 |
-| `REGISTRY_URL` | 阿里云镜像仓库地址 | 默认: registry.cn-hangzhou.aliyuncs.com | 是 |
-| `REGISTRY_NAMESPACE` | 阿里云镜像仓库命名空间 | 如: ai-platform-2026 | 是 |
+| Secret 名称                  | 说明                       | 获取方式                                  | 必填 |
+| -------------------------- | ------------------------ | ------------------------------------- | -- |
+| `ALIYUN_REGISTRY_USERNAME` | 阿里云 ACR 用户名              | 阿里云控制台                                | 是  |
+| `ALIYUN_REGISTRY_PASSWORD` | 阿里云 ACR 密码               | 阿里云控制台 → 访问凭证                         | 是  |
+| `DEV_KUBECONFIG`           | 开发环境 KubeConfig (base64) | `kubectl config view --raw \| base64` | 否  |
+| `PROD_KUBECONFIG`          | 生产环境 KubeConfig (base64) | `kubectl config view --raw \| base64` | 否  |
+| `MINIO_ACCESS_KEY`         | MinIO 访问密钥               | 自定义（建议复杂密码）                           | 是  |
+| `MINIO_SECRET_KEY`         | MinIO 秘密密钥               | 自定义（建议复杂密码）                           | 是  |
+| `DATABASE_PASSWORD`        | PostgreSQL 数据库密码         | 自定义（建议复杂密码）                           | 是  |
+| `REGISTRY_URL`             | 阿里云镜像仓库地址                | 默认: registry.cn-hangzhou.aliyuncs.com | 是  |
+| `REGISTRY_NAMESPACE`       | 阿里云镜像仓库命名空间              | 如: ai-platform-2026                   | 是  |
 
 ### GitHub Variables 配置 (可选)
 
 在 **Settings → Secrets and variables → Actions → Variables** 中可以添加：
 
-| Variable 名称 | 默认值 | 说明 |
-|--------------|-------|------|
-| `REGISTRY` | registry.cn-hangzhou.aliyuncs.com | 镜像仓库地址 |
-| `REPOSITORY` | ai-platform-2026 | 镜像仓库命名空间 |
+| Variable 名称  | 默认值                               | 说明       |
+| ------------ | --------------------------------- | -------- |
+| `REGISTRY`   | registry.cn-hangzhou.aliyuncs.com | 镜像仓库地址   |
+| `REPOSITORY` | ai-platform-2026                  | 镜像仓库命名空间 |
 
 ### 配置步骤
 
@@ -69,12 +69,10 @@ Kubernetes Cluster
    - 创建命名空间（如 `ai-platform-2026`）
    - 创建 5 个镜像仓库：api-gateway, user-service, image-service, content-service, task-service
    - 设置访问凭证（用户名/密码）
-
 2. **配置 GitHub Secrets**
    - 进入仓库设置 → Secrets and variables → Actions
    - 点击 New repository secret
    - 依次添加上述所有 Secrets
-
 3. **设置 GitHub 环境 (生产环境)**
    - Settings → Environments → New environment
    - 命名为 `production`
@@ -82,12 +80,11 @@ Kubernetes Cluster
      - 必需审查者（推荐 1-2 人）
      - 等待时间（可选，如 10 分钟）
      - 保护分支（main）
-
 4. **本地开发配置 (可选)**
    ```bash
    # 方法1: 使用脚本生成本地 Secret（仅用于本地测试）
    bash scripts/generate-secrets.sh
-   
+
    # 方法2: 手动创建 Kubernetes Secret
    kubectl create secret generic app-secrets \
      --namespace=ai-platform \
@@ -124,7 +121,7 @@ kubectl create secret generic app-secrets \
 - **密钥轮换**: 可以随时在 GitHub Secrets 中更新密码，下次部署时自动生效
 - **权限控制**: 通过 GitHub Environments 控制生产环境部署权限
 
----
+***
 
 ## 🏗️ 工程架构
 
@@ -164,23 +161,23 @@ kubectl create secret generic app-secrets \
 
 ### 微服务说明
 
-| 服务名称 | 端口 | 功能描述 |
-|---------|------|---------|
-| **API Gateway** | 18000 | API 网关，统一请求入口和路由转发 |
-| **User Service** | 18001 | 用户管理服务，处理用户注册、登录等 |
-| **Image Service** | 18002 | 图片服务，处理图片上传、存储和预签名 URL |
-| **Content Service** | 18003 | AI 内容生成服务，处理图片分析、文案生成 |
-| **Task Service** | 18004 | 任务调度服务，管理异步任务的创建和状态 |
+| 服务名称                | 端口    | 功能描述                   |
+| ------------------- | ----- | ---------------------- |
+| **API Gateway**     | 18000 | API 网关，统一请求入口和路由转发     |
+| **User Service**    | 18001 | 用户管理服务，处理用户注册、登录等      |
+| **Image Service**   | 18002 | 图片服务，处理图片上传、存储和预签名 URL |
+| **Content Service** | 18003 | AI 内容生成服务，处理图片分析、文案生成  |
+| **Task Service**    | 18004 | 任务调度服务，管理异步任务的创建和状态    |
 
 ### 基础设施
 
-| 组件 | 端口 | 用途 |
-|-----|------|-----|
-| **MinIO** | 19000/19001 | 对象存储，存储原始图片、处理结果、输出文件 |
-| **PostgreSQL** | 15432 | 关系型数据库，存储业务数据 |
-| **Redis** | 16379 | 缓存和消息队列，存储任务状态和缓存 |
+| 组件             | 端口          | 用途                    |
+| -------------- | ----------- | --------------------- |
+| **MinIO**      | 19000/19001 | 对象存储，存储原始图片、处理结果、输出文件 |
+| **PostgreSQL** | 15432       | 关系型数据库，存储业务数据         |
+| **Redis**      | 16379       | 缓存和消息队列，存储任务状态和缓存     |
 
----
+***
 
 ## ⚙️ 配置参数说明
 
@@ -188,64 +185,64 @@ kubectl create secret generic app-secrets \
 
 项目使用 **ConfigMap** + **Secret** 双重配置管理：
 
-| 配置类型 | 位置 | 用途 |
-|---------|------|------|
-| **ConfigMap** | `k8s/base/configmap.yaml` | 存储非敏感配置 |
-| **Secret** | `k8s/base/secrets.yaml` | 存储敏感配置（base64 编码） |
+| 配置类型          | 位置                        | 用途                |
+| ------------- | ------------------------- | ----------------- |
+| **ConfigMap** | `k8s/base/configmap.yaml` | 存储非敏感配置           |
+| **Secret**    | `k8s/base/secrets.yaml`   | 存储敏感配置（base64 编码） |
 
 ### MinIO 配置 (ConfigMap + Secret)
 
-| 参数名 | 来源 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `MINIO_ENDPOINT` | ConfigMap | minio:9000 | MinIO 服务地址 (容器内) |
-| `MINIO_ACCESS_KEY` | Secret | minioadmin | MinIO 访问密钥 |
-| `MINIO_SECRET_KEY` | Secret | minioadmin | MinIO 秘密密钥 |
-| `MINIO_BUCKET_RAW` | ConfigMap | raw | 原始图片存储 Bucket |
-| `MINIO_BUCKET_PROCESSED` | ConfigMap | processed | 处理结果存储 Bucket |
-| `MINIO_BUCKET_OUTPUT` | ConfigMap | output | 最终输出存储 Bucket |
+| 参数名                      | 来源        | 默认值        | 说明               |
+| ------------------------ | --------- | ---------- | ---------------- |
+| `MINIO_ENDPOINT`         | ConfigMap | minio:9000 | MinIO 服务地址 (容器内) |
+| `MINIO_ACCESS_KEY`       | Secret    | minioadmin | MinIO 访问密钥       |
+| `MINIO_SECRET_KEY`       | Secret    | minioadmin | MinIO 秘密密钥       |
+| `MINIO_BUCKET_RAW`       | ConfigMap | raw        | 原始图片存储 Bucket    |
+| `MINIO_BUCKET_PROCESSED` | ConfigMap | processed  | 处理结果存储 Bucket    |
+| `MINIO_BUCKET_OUTPUT`    | ConfigMap | output     | 最终输出存储 Bucket    |
 
 ### 数据库配置 (ConfigMap + Secret)
 
-| 参数名 | 来源 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `DATABASE_USERNAME` | ConfigMap | postgres | 数据库用户名 |
-| `DATABASE_PASSWORD` | Secret | postgres | 数据库密码 |
-| `DATABASE_HOST` | ConfigMap | postgres | 数据库主机 |
-| `DATABASE_PORT` | ConfigMap | 5432 | 数据库端口 |
-| `DATABASE_NAME` | ConfigMap | ai_platform | 数据库名称 |
+| 参数名                 | 来源        | 默认值          | 说明     |
+| ------------------- | --------- | ------------ | ------ |
+| `DATABASE_USERNAME` | ConfigMap | postgres     | 数据库用户名 |
+| `DATABASE_PASSWORD` | Secret    | postgres     | 数据库密码  |
+| `DATABASE_HOST`     | ConfigMap | postgres     | 数据库主机  |
+| `DATABASE_PORT`     | ConfigMap | 5432         | 数据库端口  |
+| `DATABASE_NAME`     | ConfigMap | ai\_platform | 数据库名称  |
 
 > 注意：应用代码需要组合成完整的 `DATABASE_URL`。
 
 ### Redis 配置 (ConfigMap)
 
-| 参数名 | 默认值 | 说明 |
-|--------|--------|------|
-| `REDIS_URL` | redis://redis:6379/0 | Redis 连接地址 |
+| 参数名         | 默认值                   | 说明         |
+| ----------- | --------------------- | ---------- |
+| `REDIS_URL` | redis\://redis:6379/0 | Redis 连接地址 |
 
 ### AI 配置 (ConfigMap)
 
-| 参数名 | 默认值 | 说明 |
-|--------|--------|------|
-| `LOCAL_GPU_ENABLED` | true | 是否启用本地 GPU 推理 |
-| `CLOUD_FALLBACK_URL` | (空) | 云端 AI 服务的回退地址 |
+| 参数名                  | 默认值  | 说明            |
+| -------------------- | ---- | ------------- |
+| `LOCAL_GPU_ENABLED`  | true | 是否启用本地 GPU 推理 |
+| `CLOUD_FALLBACK_URL` | (空)  | 云端 AI 服务的回退地址 |
 
 ### 服务间通信配置 (ConfigMap)
 
-| 参数名 | 默认值 | 说明 |
-|--------|--------|------|
-| `USER_SERVICE_URL` | http://user-service:8001 | 用户服务地址 |
-| `IMAGE_SERVICE_URL` | http://image-service:8002 | 图片服务地址 |
-| `CONTENT_SERVICE_URL` | http://content-service:8003 | 内容服务地址 |
-| `TASK_SERVICE_URL` | http://task-service:8004 | 任务服务地址 |
+| 参数名                   | 默认值                           | 说明     |
+| --------------------- | ----------------------------- | ------ |
+| `USER_SERVICE_URL`    | <http://user-service:8001>    | 用户服务地址 |
+| `IMAGE_SERVICE_URL`   | <http://image-service:8002>   | 图片服务地址 |
+| `CONTENT_SERVICE_URL` | <http://content-service:8003> | 内容服务地址 |
+| `TASK_SERVICE_URL`    | <http://task-service:8004>    | 任务服务地址 |
 
 ### 其他配置 (ConfigMap)
 
-| 参数名 | 默认值 | 说明 |
-|--------|--------|------|
+| 参数名             | 默认值     | 说明     |
+| --------------- | ------- | ------ |
 | `UPLOAD_PREFIX` | uploads | 上传文件前缀 |
-| `TASK_PREFIX` | tasks | 任务键前缀 |
+| `TASK_PREFIX`   | tasks   | 任务键前缀  |
 
----
+***
 
 ## 📦 本地开发
 
@@ -287,7 +284,7 @@ docker build -f services/content-service/Dockerfile -t content-service:latest .
 docker build -f services/task-service/Dockerfile -t task-service:latest .
 ```
 
----
+***
 
 ## ☸️ Kubernetes / K3s 部署
 
@@ -325,15 +322,15 @@ k8s/
 
 ### 环境配置对比
 
-| 配置项 | 开发环境 (dev) | 生产环境 (prod) |
-|--------|---------------|----------------|
-| **副本数** | 每个服务 1 个副本 | API Gateway: 3, 其他: 2 |
-| **存储类型** | `emptyDir` (临时存储) | `PersistentVolumeClaim` |
-| **存储大小** | 较小 (1Gi/512Mi/2Gi) | 较大 (5Gi/2Gi/10Gi) |
-| **资源限制** | 较低 | 较高 |
-| **GPU 支持** | 禁用 | 启用 (content-service) |
-| **API Gateway** | ClusterIP | LoadBalancer (端口 80) |
-| **镜像仓库** | 本地镜像 | 远程私有仓库 |
+| 配置项             | 开发环境 (dev)         | 生产环境 (prod)             |
+| --------------- | ------------------ | ----------------------- |
+| **副本数**         | 每个服务 1 个副本         | API Gateway: 3, 其他: 2   |
+| **存储类型**        | `emptyDir` (临时存储)  | `PersistentVolumeClaim` |
+| **存储大小**        | 较小 (1Gi/512Mi/2Gi) | 较大 (5Gi/2Gi/10Gi)       |
+| **资源限制**        | 较低                 | 较高                      |
+| **GPU 支持**      | 禁用                 | 启用 (content-service)    |
+| **API Gateway** | ClusterIP          | LoadBalancer (端口 80)    |
+| **镜像仓库**        | 本地镜像               | 远程私有仓库                  |
 
 ### 生成和配置 Secret
 
@@ -390,7 +387,7 @@ kubectl apply -k k8s/overlays/dev
 kubectl get pods -n ai-platform -w
 ```
 
----
+***
 
 ## 🔄 CI/CD 流程
 
@@ -405,12 +402,12 @@ kubectl get pods -n ai-platform -w
 
 ### 分支策略
 
-| 分支 | 触发行为 | 部署目标 |
-|------|---------|---------|
-| `develop` | 代码提交 | 开发环境 |
-| `main` | 代码提交 | 仅构建推送 |
-| `tags/v*` | 打标签 | 生产环境（需审批）|
-| `pull_request` | PR 提交 | 仅测试 |
+| 分支             | 触发行为  | 部署目标      |
+| -------------- | ----- | --------- |
+| `develop`      | 代码提交  | 开发环境      |
+| `main`         | 代码提交  | 仅构建推送     |
+| `tags/v*`      | 打标签   | 生产环境（需审批） |
+| `pull_request` | PR 提交 | 仅测试       |
 
 ### 流水线阶段
 
@@ -419,38 +416,35 @@ kubectl get pods -n ai-platform -w
 ```
 
 #### Stage 1: Code Linting
+
 - flake8: 代码风格检查
 - black: 代码格式检查
 - isort: 导入排序检查
 
 #### Stage 2: Build
+
 - 使用 Docker Buildx 构建
 - 支持并行构建多个服务
 - GitHub Actions 缓存优化
 
 #### Stage 3: Test
+
 - pytest 运行单元测试
 - 异步测试支持
 
 #### Stage 4: Push (仅 main/tags)
+
 - 登录阿里云 ACR
 - 推送镜像（带 SHA 标签和 latest）
 
 #### Stage 5: Deploy
+
 - **develop 分支**: 部署到开发环境
 - **tags**: 部署到生产环境（需要审批）
 
 ### 阿里云镜像仓库配置
 
-生产环境镜像地址：
-
-| 服务 | 镜像地址 |
-|------|---------|
-| api-gateway | `registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/api-gateway` |
-| user-service | `registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/user-service` |
-| image-service | `registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/image-service` |
-| content-service | `registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/content-service` |
-| task-service | `registry.cn-hangzhou.aliyuncs.com/ai-platform-2026/task-service` |
+生产环境镜像地址，每个服务需要配置对应地址
 
 ### 本地开发命令
 
@@ -503,11 +497,11 @@ bash scripts/build.sh rollback api-gateway
 
 ### 环境变量
 
-| 变量名 | 默认值 | 说明 |
-|--------|--------|------|
-| `REGISTRY` | registry.cn-hangzhou.aliyuncs.com | 镜像仓库地址 |
-| `REPOSITORY` | ai-platform-2026 | 仓库命名空间 |
-| `IMAGE_TAG` | latest | 镜像标签 |
+| 变量名          | 默认值                               | 说明     |
+| ------------ | --------------------------------- | ------ |
+| `REGISTRY`   | registry.cn-hangzhou.aliyuncs.com | 镜像仓库地址 |
+| `REPOSITORY` | ai-platform-2026                  | 仓库命名空间 |
+| `IMAGE_TAG`  | latest                            | 镜像标签   |
 
 ### 回滚策略
 
@@ -522,24 +516,24 @@ kubectl rollout undo deployment/api-gateway -n ai-platform
 kubectl rollout undo deployment/api-gateway -n ai-platform --to-revision=2
 ```
 
----
+***
 
 ## 🏥 健康检查
 
 启动后访问以下地址验证服务状态：
 
-| 服务 | 健康检查地址 |
-|-----|------------|
-| **API Gateway** | http://localhost:18000/health |
-| **User Service** | http://localhost:18001/health |
-| **Image Service** | http://localhost:18002/health |
-| **Content Service** | http://localhost:18003/health |
-| **Task Service** | http://localhost:18004/health |
-| **MinIO Console** | http://localhost:19001 |
+| 服务                  | 健康检查地址                          |
+| ------------------- | ------------------------------- |
+| **API Gateway**     | <http://localhost:18000/health> |
+| **User Service**    | <http://localhost:18001/health> |
+| **Image Service**   | <http://localhost:18002/health> |
+| **Content Service** | <http://localhost:18003/health> |
+| **Task Service**    | <http://localhost:18004/health> |
+| **MinIO Console**   | <http://localhost:19001>        |
 
 > MinIO 登录凭据: `minioadmin` / `minioadmin`
 
----
+***
 
 ## ⚠️ 注意事项
 
@@ -550,11 +544,12 @@ kubectl rollout undo deployment/api-gateway -n ai-platform --to-revision=2
 5. **数据持久化**: 使用 `docker-compose down -v` 会删除所有数据，谨慎使用
 6. **敏感信息**: 不要提交 `k8s/base/secrets.yaml` 到 Git，建议添加到 `.gitignore`
 
----
+***
 
 ## 🔧 故障排查
 
 ### 问题: 服务启动失败
+
 ```bash
 # 查看具体服务日志
 docker-compose logs <service-name>
@@ -564,6 +559,7 @@ docker-compose logs image-service
 ```
 
 ### 问题: 端口被占用
+
 ```bash
 # 查看端口占用情况
 lsof -i :<port>
@@ -572,12 +568,14 @@ lsof -i :<port>
 ```
 
 ### 问题: 构建失败
+
 ```bash
 # 清理缓存并重新构建
 docker-compose build --no-cache <service-name>
 ```
 
 ### 问题: Kubernetes 部署失败
+
 ```bash
 # 查看 Pod 状态和事件
 kubectl get pods -n ai-platform
@@ -590,3 +588,4 @@ kubectl logs <pod-name> -n ai-platform
 kubectl get configmap app-config -n ai-platform -o yaml
 kubectl get secret app-secrets -n ai-platform -o yaml
 ```
+

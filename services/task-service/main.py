@@ -9,8 +9,7 @@ from redis.asyncio import Redis
 
 from shared.config import settings
 from shared.minio_service import MinIOService
-from shared.models import (GenericResponse, TaskCreateRequest,
-                           TaskStatusResponse)
+from shared.models import GenericResponse, TaskCreateRequest, TaskStatusResponse
 
 app = FastAPI(
     title="任务调度服务",
