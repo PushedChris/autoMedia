@@ -1,11 +1,12 @@
 import uuid
+
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 
 from shared.config import settings
-from shared.models import GenericResponse, UploadResponse
 from shared.minio_service import MinIOService
+from shared.models import GenericResponse, UploadResponse
 
 app = FastAPI(
     title="图片处理服务",
@@ -44,7 +45,9 @@ async def upload_image(file: UploadFile = File(...)):
     data = await file.read()
     object_name = f"{uuid.uuid4().hex}/{file.filename}"
     try:
-        minio_service.upload_bytes(settings.minio_bucket_raw, object_name, data, file.content_type)
+        minio_service.upload_bytes(
+            settings.minio_bucket_raw, object_name, data, file.content_type
+        )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"上传失败: {exc}")
 

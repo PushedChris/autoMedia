@@ -1,4 +1,5 @@
 import io
+
 from minio import Minio
 
 from shared.config import settings
@@ -28,7 +29,13 @@ class MinIOService:
             if not self.client.bucket_exists(bucket):
                 self.client.make_bucket(bucket)
 
-    def upload_bytes(self, bucket: str, object_name: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+    def upload_bytes(
+        self,
+        bucket: str,
+        object_name: str,
+        data: bytes,
+        content_type: str = "application/octet-stream",
+    ) -> str:
         self.client.put_object(
             bucket,
             object_name,
@@ -41,7 +48,13 @@ class MinIOService:
     def presigned_url(self, bucket: str, object_name: str, expires: int = 3600) -> str:
         return self.client.presigned_get_object(bucket, object_name, expires=expires)
 
-    def copy_object(self, source_bucket: str, object_name: str, dest_bucket: str, dest_object_name: str) -> None:
+    def copy_object(
+        self,
+        source_bucket: str,
+        object_name: str,
+        dest_bucket: str,
+        dest_object_name: str,
+    ) -> None:
         self.client.copy_object(
             dest_bucket,
             dest_object_name,

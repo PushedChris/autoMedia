@@ -1,7 +1,7 @@
+import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-import httpx
 
 from shared.config import settings
 from shared.models import GenericResponse
@@ -21,7 +21,9 @@ app.add_middleware(
 )
 
 
-@app.api_route("/api/{service_name}/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+@app.api_route(
+    "/api/{service_name}/{path:path}", methods=["GET", "POST", "PUT", "DELETE"]
+)
 async def api_proxy(service_name: str, path: str, request: Request):
     service_urls = {
         "user": settings.user_service_url,
@@ -29,14 +31,14 @@ async def api_proxy(service_name: str, path: str, request: Request):
         "content": settings.content_service_url,
         "task": settings.task_service_url,
     }
-    
+
     if service_name not in service_urls:
         raise HTTPException(status_code=404, detail=f"服务 {service_name} 不存在")
-    
+
     target_url = f"{service_urls[service_name]}/api/{path}"
-    
+
     body = await request.body() if request.method in ["POST", "PUT"] else None
-    
+
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.request(
             method=request.method,
@@ -56,12 +58,12 @@ async def api_proxy(service_name: str, path: str, request: Request):
 @app.get("/health", response_model=GenericResponse)
 async def health_check():
     return GenericResponse(
-        status="ok", 
-        message="API Gateway 正常", 
+        status="ok",
+        message="API Gateway 正常",
         data={
             "user_service": settings.user_service_url,
             "image_service": settings.image_service_url,
             "content_service": settings.content_service_url,
             "task_service": settings.task_service_url,
-        }
+        },
     )

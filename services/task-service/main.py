@@ -1,14 +1,16 @@
 import asyncio
 import uuid
 from datetime import datetime
+
+import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
-import httpx
 
 from shared.config import settings
-from shared.models import GenericResponse, TaskCreateRequest, TaskStatusResponse
 from shared.minio_service import MinIOService
+from shared.models import (GenericResponse, TaskCreateRequest,
+                           TaskStatusResponse)
 
 app = FastAPI(
     title="任务调度服务",
@@ -44,9 +46,13 @@ async def shutdown_event():
 
 @app.post("/api/task", response_model=GenericResponse)
 async def create_task(request: TaskCreateRequest):
-    if request.bucket not in [settings.minio_bucket_raw, settings.minio_bucket_processed, settings.minio_bucket_output]:
+    if request.bucket not in [
+        settings.minio_bucket_raw,
+        settings.minio_bucket_processed,
+        settings.minio_bucket_output,
+    ]:
         raise HTTPException(status_code=400, detail="bucket 参数无效")
-    
+
     task_id = uuid.uuid4().hex
     task_key = f"{settings.task_prefix}:{task_id}"
     task_data = {
@@ -71,22 +77,28 @@ async def get_task_status(task_id: str):
     data = await redis.hgetall(task_key)
     if not data:
         raise HTTPException(status_code=404, detail="任务不存在")
-    
+
     task = {k.decode(): v.decode() for k, v in data.items()}
     return TaskStatusResponse(
         task_id=task_id,
         status=task.get("status", "unknown"),
         progress=int(task.get("progress", 0)),
         message=task.get("message"),
-        result={
-            "result_object": task.get("result_object"),
-        } if task.get("result_object") else None,
+        result=(
+            {
+                "result_object": task.get("result_object"),
+            }
+            if task.get("result_object")
+            else None
+        ),
     )
 
 
 async def run_task(task_id: str):
     task_key = f"{settings.task_prefix}:{task_id}"
-    await redis.hset(task_key, mapping={"status": "running", "progress": 10, "message": "开始处理"})
+    await redis.hset(
+        task_key, mapping={"status": "running", "progress": 10, "message": "开始处理"}
+    )
     task = await redis.hgetall(task_key)
     if not task:
         return
@@ -96,14 +108,14 @@ async def run_task(task_id: str):
 
     try:
         await redis.hset(task_key, mapping={"progress": 20, "message": "调用图片分析"})
-        
+
         async with httpx.AsyncClient(timeout=60) as client:
             resp = await client.post(
                 f"{settings.content_service_url}/api/analyze",
                 params={"bucket": bucket, "object_name": object_name},
             )
             analysis = resp.json()["data"]["analysis"]
-        
+
         await redis.hset(task_key, mapping={"progress": 45, "message": "图像理解完成"})
 
         async with httpx.AsyncClient(timeout=60) as client:
@@ -112,7 +124,7 @@ async def run_task(task_id: str):
                 json=analysis,
             )
             generated = resp.json()["data"]["copy"]
-        
+
         await redis.hset(task_key, mapping={"progress": 70, "message": "文案生成完成"})
 
         async with httpx.AsyncClient(timeout=60) as client:
@@ -121,7 +133,7 @@ async def run_task(task_id: str):
                 json=generated,
             )
             optimized = resp.json()["data"]["copy"]
-        
+
         await redis.hset(task_key, mapping={"progress": 85, "message": "风格优化完成"})
 
         result_object = f"{task_id}/result.json"
@@ -132,9 +144,19 @@ async def run_task(task_id: str):
             result_bytes,
             content_type="application/json",
         )
-        await redis.hset(task_key, mapping={"progress": 100, "status": "completed", "message": "任务完成", "result_object": result_object})
+        await redis.hset(
+            task_key,
+            mapping={
+                "progress": 100,
+                "status": "completed",
+                "message": "任务完成",
+                "result_object": result_object,
+            },
+        )
     except Exception as exc:
-        await redis.hset(task_key, mapping={"status": "failed", "message": str(exc), "progress": 0})
+        await redis.hset(
+            task_key, mapping={"status": "failed", "message": str(exc), "progress": 0}
+        )
 
 
 @app.get("/health", response_model=GenericResponse)
