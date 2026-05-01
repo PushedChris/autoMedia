@@ -95,9 +95,7 @@ async def get_task_status(task_id: str):
 
 async def run_task(task_id: str):
     task_key = f"{settings.task_prefix}:{task_id}"
-    await redis.hset(
-        task_key, mapping={"status": "running", "progress": 10, "message": "开始处理"}
-    )
+    await redis.hset(task_key, mapping={"status": "running", "progress": 10, "message": "开始处理"})
     task = await redis.hgetall(task_key)
     if not task:
         return
@@ -153,9 +151,7 @@ async def run_task(task_id: str):
             },
         )
     except Exception as exc:
-        await redis.hset(
-            task_key, mapping={"status": "failed", "message": str(exc), "progress": 0}
-        )
+        await redis.hset(task_key, mapping={"status": "failed", "message": str(exc), "progress": 0})
 
 
 @app.get("/health", response_model=GenericResponse)

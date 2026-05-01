@@ -31,9 +31,7 @@ async def analyze_image(bucket: str, object_name: str):
         style="写实",
         emotion="宁静",
     )
-    return GenericResponse(
-        status="ok", message="分析完成", data={"analysis": analysis.model_dump()}
-    )
+    return GenericResponse(status="ok", message="分析完成", data={"analysis": analysis.model_dump()})
 
 
 @app.post("/api/generate", response_model=GenericResponse)
@@ -46,9 +44,7 @@ async def generate_copy(analysis: dict):
         body=body,
         tags=["自媒体", "图文", "爆款", analysis.get("style", "通用")],
     )
-    return GenericResponse(
-        status="ok", message="生成完成", data={"copy": copy.model_dump()}
-    )
+    return GenericResponse(status="ok", message="生成完成", data={"copy": copy.model_dump()})
 
 
 @app.post("/api/optimize", response_model=GenericResponse)

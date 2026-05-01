@@ -21,9 +21,7 @@ app.add_middleware(
 )
 
 
-@app.api_route(
-    "/api/{service_name}/{path:path}", methods=["GET", "POST", "PUT", "DELETE"]
-)
+@app.api_route("/api/{service_name}/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def api_proxy(service_name: str, path: str, request: Request):
     service_urls = {
         "user": settings.user_service_url,
